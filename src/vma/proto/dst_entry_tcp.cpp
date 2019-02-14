@@ -127,6 +127,10 @@ ssize_t dst_entry_tcp::fast_send(const iovec* p_iov, const ssize_t sz_iov, vma_s
 		/* set wr_id as a pointer to memory descriptor */
 		m_p_send_wqe->wr_id = (uintptr_t)p_tcp_iov[0].p_desc;
 
+		/* save pointers to ip and tcp headers for software checksum calculation */
+		p_tcp_iov[0].p_desc->tx.p_ip_h = &p_pkt->hdr.m_ip_hdr;
+		p_tcp_iov[0].p_desc->tx.p_tcp_h =(struct tcphdr*)((uint8_t*)(&(p_pkt->hdr.m_ip_hdr)) + sizeof(p_pkt->hdr.m_ip_hdr));
+
 		/* Update scatter gather element list */
 		m_sge[0].addr = (uintptr_t)((uint8_t*)p_pkt + hdr_alignment_diff);
 		m_sge[0].length = total_packet_len;
@@ -172,6 +176,10 @@ ssize_t dst_entry_tcp::fast_send(const iovec* p_iov, const ssize_t sz_iov, vma_s
 
 		/* set wr_id as a pointer to memory descriptor */
 		m_p_send_wqe->wr_id = (uintptr_t)p_tcp_iov[0].p_desc;
+
+		/* save pointers to ip and tcp headers for software checksum calculation */
+		p_tcp_iov[0].p_desc->tx.p_ip_h = &p_pkt->hdr.m_ip_hdr;
+		p_tcp_iov[0].p_desc->tx.p_tcp_h =(struct tcphdr*)((uint8_t*)(&(p_pkt->hdr.m_ip_hdr)) + sizeof(p_pkt->hdr.m_ip_hdr));
 
 		/* Update scatter gather element list
 		 * ref counter is incremented for the first memory descriptor only because it is needed
