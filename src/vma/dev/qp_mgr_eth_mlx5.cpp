@@ -314,13 +314,13 @@ cq_mgr* qp_mgr_eth_mlx5::init_tx_cq_mgr()
 	return new cq_mgr_mlx5(m_p_ring, m_p_ib_ctx_handler, m_tx_num_wr, m_p_ring->get_tx_comp_event_channel(), false);
 }
 
-inline void qp_mgr_eth_mlx5::set_signal_in_next_send_wqe()
+void qp_mgr_eth_mlx5::set_signal_in_next_send_wqe()
 {
 	volatile struct mlx5_wqe64 *wqe = &(*m_sq_wqes)[m_sq_wqe_counter & (m_tx_num_wr - 1)];
 	wqe->ctrl.data[2] = htonl(8);
 }
 
-inline void qp_mgr_eth_mlx5::ring_doorbell(uint64_t* wqe, int db_method, int num_wqebb, int num_wqebb_top)
+void qp_mgr_eth_mlx5::ring_doorbell(uint64_t* wqe, int db_method, int num_wqebb, int num_wqebb_top)
 {
 	uint64_t* dst = (uint64_t*)((uint8_t*)m_mlx5_qp.bf.reg + m_mlx5_qp.bf.offset);
 	uint64_t* src = wqe;
@@ -359,7 +359,7 @@ inline void qp_mgr_eth_mlx5::ring_doorbell(uint64_t* wqe, int db_method, int num
 	m_mlx5_qp.bf.offset ^= m_mlx5_qp.bf.size;
 }
 
-inline int qp_mgr_eth_mlx5::fill_inl_segment(sg_array &sga, uint8_t *cur_seg, uint8_t* data_addr,
+int qp_mgr_eth_mlx5::fill_inl_segment(sg_array &sga, uint8_t *cur_seg, uint8_t* data_addr,
 			     int max_inline_len, int inline_len)
 {
 	int wqe_inline_size = 0;
@@ -377,7 +377,7 @@ inline int qp_mgr_eth_mlx5::fill_inl_segment(sg_array &sga, uint8_t *cur_seg, ui
 	return wqe_inline_size;
 }
 
-inline int qp_mgr_eth_mlx5::fill_ptr_segment(sg_array &sga, struct mlx5_wqe_data_seg* dp_seg, uint8_t* data_addr,
+int qp_mgr_eth_mlx5::fill_ptr_segment(sg_array &sga, struct mlx5_wqe_data_seg* dp_seg, uint8_t* data_addr,
 			     int data_len, mem_buf_desc_t* buffer)
 {
 	int wqe_seg_size = 0;
@@ -408,7 +408,7 @@ inline int qp_mgr_eth_mlx5::fill_ptr_segment(sg_array &sga, struct mlx5_wqe_data
 }
 
 //! Fill WQE dynamically, based on amount of free WQEBB in SQ
-inline int qp_mgr_eth_mlx5::fill_wqe(vma_ibv_send_wr *pswr)
+int qp_mgr_eth_mlx5::fill_wqe(vma_ibv_send_wr *pswr)
 {
 	// control segment is mostly filled by preset after previous packet
 	// we always inline ETH header
@@ -536,7 +536,7 @@ inline int qp_mgr_eth_mlx5::fill_wqe(vma_ibv_send_wr *pswr)
 }
 
 //! Filling wqe for LSO
-inline int qp_mgr_eth_mlx5::fill_wqe_lso(vma_ibv_send_wr* pswr)
+int qp_mgr_eth_mlx5::fill_wqe_lso(vma_ibv_send_wr* pswr)
 {
 #ifdef HAVE_TSO
 	struct mlx5_wqe_eth_seg* eth_seg = (struct mlx5_wqe_eth_seg*)((uint8_t*)m_sq_wqe_hot + sizeof(struct mlx5_wqe_ctrl_seg));
