@@ -4114,10 +4114,12 @@ int sockinfo_tcp::zero_copy_rx(iovec *p_iov, mem_buf_desc_t *pdesc, int *p_flags
 		
 			p_pkts->iov[p_pkts->sz_iov++] = p_desc_iter->rx.frag;
 			total_rx += p_desc_iter->rx.frag.iov_len;
+			len -= sizeof(iovec);
+			offset += sizeof(iovec);
 			
 			prev 		= p_desc_iter;
 			p_desc_iter = p_desc_iter->p_next_desc;	
-			if (p_desc_iter) {
+			if (len < 0 && p_desc_iter) {
 				p_desc_iter->lwip_pbuf.pbuf.tot_len = prev->lwip_pbuf.pbuf.tot_len - prev->lwip_pbuf.pbuf.len;
 				p_desc_iter->rx.n_frags = --prev->rx.n_frags;
 				p_desc_iter->rx.src = prev->rx.src;
@@ -4126,11 +4128,11 @@ int sockinfo_tcp::zero_copy_rx(iovec *p_iov, mem_buf_desc_t *pdesc, int *p_flags
 				prev->p_next_desc = NULL;
 				prev->rx.n_frags = 1;
 			}
-			len -= sizeof(iovec);
-			offset += sizeof(iovec);
 		}
 		
-		if (len < 0 && p_desc_iter){
+		if (len < 0 && p_desc_iter) {
+		  m_p_socket_stats->n_rx_zcopy_pkt_count++;
+			// __log_err("Received zcopy packet, socket %d, count %lu\n", m_fd, m_p_socket_stats->n_rx_zcopy_pkt_count);
 			m_rx_pkt_ready_list.pop_front();
 			m_rx_pkt_ready_list.push_front(p_desc_iter);
 			break;
